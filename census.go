@@ -2,11 +2,15 @@ package ot
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
 
-const CensusURL = "https://census.daybreakgames.com"
+const (
+	CensusURL = "https://census.daybreakgames.com"
+	CensusID  = "outfittracker"
+)
 
 type CensusCountResult struct {
 	Count int `json:"count"`
@@ -18,8 +22,26 @@ func (r CensusGetResult) Returned() int {
 	return int(r["returned"].(float64))
 }
 
-func (r CensusGetResult) List(name string) []map[string]interface{} {
-	return r[name+"_list"].([]map[string]interface{})
+func (r CensusGetResult) List(name string) []interface{} {
+	return r[name+"_list"].([]interface{})
+}
+
+func (r CensusGetResult) Err() error {
+	if err, ok := r["error"]; ok {
+		return CensusError{
+			Err: err.(string),
+		}
+	}
+
+	return nil
+}
+
+type CensusError struct {
+	Err string `json:"error"`
+}
+
+func (err CensusError) Error() string {
+	return err.Err
 }
 
 type CensusQuery struct {
@@ -34,17 +56,20 @@ type CensusQuery struct {
 }
 
 func (cq *CensusQuery) getURL() string {
-	return fmt.Sprintf("%v/get/ps2/%v?%v&c:limitPerDB=%v",
+	return fmt.Sprintf("%v/s:%v/get/ps2/%v?%v&c:limitPerDB=%v&c:start=%v",
 		CensusURL,
+		CensusID,
 		cq.Object,
 		cq.Query,
 		cq.Num,
+		cq.at,
 	)
 }
 
 func (cq *CensusQuery) countURL() string {
-	return fmt.Sprintf("%v/count/ps2/%v?%v",
+	return fmt.Sprintf("%v/s:%v/count/ps2/%v?%v",
 		CensusURL,
+		CensusID,
 		cq.Object,
 		cq.Query,
 	)
@@ -78,6 +103,8 @@ func (cq *CensusQuery) init() (err error) {
 	if cq.Num == 0 {
 		cq.Num = 20
 	}
+
+	return nil
 }
 
 func (cq *CensusQuery) Len() int {
@@ -94,7 +121,7 @@ func (cq *CensusQuery) Next() (r CensusGetResult, err error) {
 	cq.init()
 
 	if !cq.HasNext() {
-		err = errors.New("No more data to get.")
+		err = errors.New("No more data to get")
 		return
 	}
 
