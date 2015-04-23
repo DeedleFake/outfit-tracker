@@ -22,7 +22,12 @@ func handleUpdate(rw http.ResponseWriter, req *http.Request) {
 		Query:  "c:resolve=outfit,world&c:show=character_id,faction_id,times.last_login",
 	}
 
-	log.Printf("Updating %v characters...", cq.Len())
+	switch initial {
+	case true:
+		log.Printf("Populating with %v characters...")
+	case false:
+		log.Printf("Updating %v characters...", cq.Len())
+	}
 
 	for cq.HasNext() {
 		r, err := cq.Next()
@@ -56,39 +61,40 @@ func handleUpdate(rw http.ResponseWriter, req *http.Request) {
 			if ro != nil {
 				c.Outfit = ro["outfit_id"].(string)
 			}
-			log.Printf("Updating char: %v", c.ID)
 
-			yc, err := GetChar(ctx, c.ID)
-			if err != nil {
-				panic(err)
-			}
-
-			if !initial && (yc.Outfit != c.Outfit) {
-				m, err := GetMovement(ctx, yc.Outfit, c.Outfit)
+			if !initial {
+				yc, err := GetChar(ctx, c.ID)
 				if err != nil {
 					panic(err)
 				}
 
-				m.Amount++
+				if yc.Outfit != c.Outfit {
+					m, err := GetMovement(ctx, yc.Outfit, c.Outfit)
+					if err != nil {
+						panic(err)
+					}
 
-				err = PutMovement(ctx, m)
-				if err != nil {
-					panic(err)
+					m.Amount++
+
+					err = PutMovement(ctx, m)
+					if err != nil {
+						panic(err)
+					}
+
+					oo, err := GetOutfit(ctx, yc.Outfit)
+					if err != nil {
+						panic(err)
+					}
+
+					oo.Members--
+
+					err = PutOutfit(ctx, oo)
+					if err != nil {
+						panic(err)
+					}
+
+					log.Printf("%v moved from %q to %q", c.ID, oo.Name, ro["name"])
 				}
-
-				oo, err := GetOutfit(ctx, yc.Outfit)
-				if err != nil {
-					panic(err)
-				}
-
-				oo.Members--
-
-				err = PutOutfit(ctx, oo)
-				if err != nil {
-					panic(err)
-				}
-
-				log.Printf("Movement from %q to %q", oo.Name, ro["name"])
 			}
 
 			no, err := GetOutfit(ctx, c.Outfit)
@@ -116,9 +122,30 @@ func handleUpdate(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	log.Printf("Update complete.")
+	switch initial {
+	case true:
+		log.Printf("Population complete.")
+	case false:
+		log.Printf("Update complete.")
+	}
+}
+
+func handleView(rw http.ResponseWriter, req *http.Request) {
+	err := tmpl.ExecuteTemplate(rw, "view", req.URL.Query())
+	if err != nil {
+		panic(err)
+	}
+}
+
+func handleMain(rw http.ResponseWriter, req *http.Request) {
+	err := tmpl.ExecuteTemplate(rw, "main", nil)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func init() {
-	http.HandleFunc("/", handleUpdate)
+	http.HandleFunc("/update", handleUpdate)
+	http.HandleFunc("/view", handleView)
+	http.HandleFunc("/", handleMain)
 }
