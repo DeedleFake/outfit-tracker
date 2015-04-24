@@ -37,14 +37,19 @@ const (
 	<head>
 		<link rel='stylesheet' href='/assets/style.css' />
 
-		<script type='application/javascript' src='/assets/cytoscape.min.js'></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
 		<script type='application/javascript' src='/assets/view.js'></script>
 	</head>
 	<body>
-		<h2>Not implemented.</h2>
-		{{.Get "server"}}
-		{{.Get "faction"}}
+		<div id='header'><h2>{{.server}}: {{.faction}}</h2></div>
+
+		<div id='graph'></div>
+
+		<div style='display:none;'>
+			<div id='server'>{{.serverID}}</div>
+			<div id='faction'>{{.factionID}}</div>
+		</div>
 	</body>
 </html>`
 )

@@ -3,6 +3,7 @@ package ot
 import (
 	"appengine"
 	"appengine/urlfetch"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -131,7 +132,37 @@ func handleUpdate(rw http.ResponseWriter, req *http.Request) {
 }
 
 func handleView(rw http.ResponseWriter, req *http.Request) {
-	err := tmpl.ExecuteTemplate(rw, "view", req.URL.Query())
+	q := req.URL.Query()
+	server := q.Get("server")
+	faction := q.Get("faction")
+
+	err := tmpl.ExecuteTemplate(rw, "view", map[string]interface{}{
+		"server":    Servers[server],
+		"faction":   Factions[faction],
+		"serverID":  server,
+		"factionID": faction,
+	})
+	if err != nil {
+		panic(err)
+	}
+}
+
+func handleData(rw http.ResponseWriter, req *http.Request) {
+	q := req.URL.Query()
+	server := q.Get("server")
+	faction := q.Get("faction")
+
+	e := json.NewEncoder(rw)
+	err := e.Encode(map[string]interface{}{
+		"nodes": []map[string]interface{}{
+			{"data": map[string]interface{}{"id": Servers[server]}},
+			{"data": map[string]interface{}{"id": Factions[faction]}},
+		},
+
+		"edges": []map[string]interface{}{
+			{"data": map[string]interface{}{"id": server + "-" + faction, "weight": 1, "source": Servers[server], "target": Factions[faction]}},
+		},
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -147,5 +178,6 @@ func handleMain(rw http.ResponseWriter, req *http.Request) {
 func init() {
 	http.HandleFunc("/update", handleUpdate)
 	http.HandleFunc("/view", handleView)
+	http.HandleFunc("/data", handleData)
 	http.HandleFunc("/", handleMain)
 }

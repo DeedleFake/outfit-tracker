@@ -12,6 +12,24 @@ const (
 	CensusID  = "outfittracker"
 )
 
+var (
+	Servers = map[string]string{
+		"19": "Jaeger",
+		"25": "Briggs",
+		"13": "Cobalt",
+		"10": "Miller",
+		"1":  "Connery",
+		"17": "Emerald",
+	}
+
+	Factions = map[string]string{
+		"0": "Nanite Systems",
+		"1": "Vanu Sovereignty",
+		"2": "New Conglomerate",
+		"3": "Terran Republic",
+	}
+)
+
 type CensusCountResult struct {
 	Count int `json:"count"`
 }
