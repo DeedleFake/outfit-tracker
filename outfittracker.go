@@ -33,8 +33,8 @@ func handleUpdate(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	for cq.HasNext() {
-		if p := cq.At() * 100 / cq.Len(); p%10 == 0 {
-			log.Printf("Finished %v%% of update.", p)
+		if cq.At()%100 == 0 {
+			log.Printf("Updated %v characters.", cq.At())
 		}
 
 		r, err := cq.Next()
@@ -200,6 +200,7 @@ func handleData(rw http.ResponseWriter, req *http.Request) {
 			"data": map[string]interface{}{
 				"id":    ocur.ID,
 				"label": label,
+				"size":  ocur.Members,
 			},
 		})
 

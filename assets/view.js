@@ -8,7 +8,13 @@ $(document).ready(function() {
 
 			style: cytoscape.stylesheet()
 				.selector('node').css({
-					'content': 'data(label)'
+					'content': 'data(label)',
+					'text-valign': 'center',
+					'color': '#FFFFFF',
+					'text-outline-width': 3,
+					'text-outline-color': '#888888',
+					'width': 'data(size)',
+					'height': 'data(size)'
 				})
 				.selector('edge').css({
 					'target-arrow-shape': 'triangle',
@@ -20,8 +26,16 @@ $(document).ready(function() {
 			elements: data,
 
 			layout: {
-				name: 'circle',
-				directed: true
+				name: 'concentric',
+				concentric: function() {
+					return this.data('size') * 100;
+				},
+				levelWidth: function(nodes) {
+					return 100;
+				},
+				avoidOverlap: true,
+				directed: true,
+				padding: 10
 			}
 		});
 	});
