@@ -125,6 +125,10 @@ func (cq *CensusQuery) init() (err error) {
 	return nil
 }
 
+func (cq *CensusQuery) At() int {
+	return cq.at
+}
+
 func (cq *CensusQuery) Len() int {
 	cq.init()
 

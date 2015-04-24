@@ -8,7 +8,7 @@ $(document).ready(function() {
 
 			style: cytoscape.stylesheet()
 				.selector('node').css({
-					'content': 'data(id)'
+					'content': 'data(label)'
 				})
 				.selector('edge').css({
 					'target-arrow-shape': 'triangle',
